@@ -5,17 +5,24 @@ import com.cobblemon.mod.common.Cobblemon;
 import com.cobblemon.mod.common.api.storage.party.PlayerPartyStore;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.world.World;
 import org.pokesplash.teampreview.command.CommandHandler;
 import org.pokesplash.teampreview.preview.Participant;
 import org.pokesplash.teampreview.preview.Preview;
 import org.pokesplash.teampreview.ui.TeamPreviewMenu;
 
 import java.util.ArrayList;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 public class TeamPreview implements ModInitializer {
 	private static final ArrayList<Preview> previews = new ArrayList<>();
+	public static MinecraftServer server;
+
+
 
 	/**
 	 * Runs the mod initializer.
@@ -23,6 +30,7 @@ public class TeamPreview implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		CommandRegistrationCallback.EVENT.register(CommandHandler::registerCommands);
+		ServerWorldEvents.LOAD.register((t, e) -> server = t);
 	}
 
 	/**
@@ -31,8 +39,16 @@ public class TeamPreview implements ModInitializer {
 	 * @param player2 The second player
 	 * @param onConfirm Confirm button logic.
 	 */
-	public static void createPreview(ServerPlayerEntity player1, ServerPlayerEntity player2,
+	public static void createPreview(UUID player1, UUID player2,
 									 Consumer<Preview> onConfirm) {
+
+		// If either player has an existing preview, remove it.
+		for (Preview preview : previews) {
+			if (preview.containsPlayer(player1) || preview.containsPlayer(player2)) {
+				previews.remove(preview);
+			}
+		}
+
 		// Adds the preview to the list so it can be opened later if needed.
 		previews.add(new Preview(player1, player2, onConfirm));
 	}
@@ -41,10 +57,11 @@ public class TeamPreview implements ModInitializer {
 	 * Opens the team preview for a player that already has one.
 	 * @param player The player to query.
 	 */
-	public static void openPreview(ServerPlayerEntity player) {
+	public static void openPreview(UUID player) {
+		ServerPlayerEntity player1 = getPlayer(player);
 		for (Preview preview : previews) {
-			if (preview.containsPlayer(player)) {
-				UIManager.openUIForcefully(player, new TeamPreviewMenu().getPage(player, preview));
+			if (preview.containsPlayer(player1)) {
+				UIManager.openUIForcefully(player1, new TeamPreviewMenu().getPage(player1, preview));
 				break;
 			}
 		}
@@ -56,6 +73,12 @@ public class TeamPreview implements ModInitializer {
 	 */
 	public static void run(Preview preview) {
 
+		// Closes any UI between the players.
+		ServerPlayerEntity player1 = getPlayer(preview.getPlayer1().getPlayer());
+		ServerPlayerEntity player2 = getPlayer(preview.getPlayer2().getPlayer());
+		UIManager.closeUI(player1);
+		UIManager.closeUI(player2);
+
 		setLead(preview.getPlayer1());
 		setLead(preview.getPlayer2());
 
@@ -65,8 +88,19 @@ public class TeamPreview implements ModInitializer {
 	}
 
 	private static void setLead(Participant participant) {
-		PlayerPartyStore party = Cobblemon.INSTANCE.getStorage().getParty(participant.getPlayer());
+
+		ServerPlayerEntity player = server.getPlayerManager().getPlayer(participant.getPlayer());
+
+		if (player == null) {
+			return;
+		}
+
+		PlayerPartyStore party = Cobblemon.INSTANCE.getStorage().getParty(player);
 
 		party.swap(0, participant.getLead());
+	}
+
+	public static ServerPlayerEntity getPlayer(UUID player) {
+		return server.getPlayerManager().getPlayer(player);
 	}
 }

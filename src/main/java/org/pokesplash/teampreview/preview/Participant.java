@@ -2,16 +2,18 @@ package org.pokesplash.teampreview.preview;
 
 import net.minecraft.server.network.ServerPlayerEntity;
 
+import java.util.UUID;
+
 public class Participant {
-    private ServerPlayerEntity player;
+    private UUID player;
     private int lead;
 
-    public Participant(ServerPlayerEntity player) {
+    public Participant(UUID player) {
         this.player = player;
         lead = 0;
     }
 
-    public ServerPlayerEntity getPlayer() {
+    public UUID getPlayer() {
         return player;
     }
 

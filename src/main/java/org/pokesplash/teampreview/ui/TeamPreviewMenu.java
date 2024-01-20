@@ -16,6 +16,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import org.pokesplash.teampreview.TeamPreview;
+import org.pokesplash.teampreview.preview.Participant;
 import org.pokesplash.teampreview.preview.Preview;
 import org.pokesplash.teampreview.util.PokemonInfo;
 
@@ -26,7 +28,7 @@ public class TeamPreviewMenu {
     public Page getPage(ServerPlayerEntity user, Preview preview) {
 
         int lead = preview.getPlayer(user).getLead();
-        ServerPlayerEntity opponent = preview.getOtherPlayer(user).getPlayer();
+        ServerPlayerEntity opponent = TeamPreview.getPlayer(preview.getOtherPlayer(user).getPlayer());
 
         Pokemon startingPokemon = Cobblemon.INSTANCE.getStorage().getParty(user).get(lead);
 
@@ -38,6 +40,27 @@ public class TeamPreviewMenu {
                 .display(startingItem)
                 .hideFlags(FlagType.All)
                 .lore(Text.class, PokemonInfo.parse(startingPokemon))
+                .build();
+
+        Button confirm = GooeyButton.builder()
+                .title("§2Ready Up")
+                .display(new ItemStack(Items.LIME_STAINED_GLASS_PANE))
+                .hideFlags(FlagType.All)
+                .onClick(e -> {
+                    Participant participant = preview.getPlayer(user);
+                    preview.setReady(user, participant, true);
+                })
+                .build();
+
+        Button cancel = GooeyButton.builder()
+                .title("§cCancel")
+                .display(new ItemStack(Items.RED_STAINED_GLASS_PANE))
+                .hideFlags(FlagType.All)
+                .onClick(e -> {
+                    Participant participant = preview.getPlayer(user);
+                    preview.setReady(user, participant, false);
+                })
+
                 .build();
 
         // Gets the user and opponent party Pokemon as lists.
@@ -65,6 +88,7 @@ public class TeamPreviewMenu {
                 .set(32, userPokemon.get(4))
                 .set(33, userPokemon.get(5))
                 .set(25, startingPokemonButton)
+                .set(26, preview.isReady(preview.getPlayer(user)) ? cancel : confirm)
                 .build();
 
         return GooeyPage.builder()

@@ -21,11 +21,11 @@ public class BaseCommand {
 
 	public int run(CommandContext<ServerCommandSource> context) {
 
-		if (context.getSource().isExecutedByPlayer()) {
+		if (!context.getSource().isExecutedByPlayer()) {
 			return 1;
 		}
 
-		TeamPreview.openPreview(context.getSource().getPlayer());
+		TeamPreview.openPreview(context.getSource().getPlayer().getUuid());
 		return 1;
 	}
 }
