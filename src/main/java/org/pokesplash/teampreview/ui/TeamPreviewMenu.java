@@ -22,6 +22,7 @@ import org.pokesplash.teampreview.preview.Preview;
 import org.pokesplash.teampreview.util.PokemonInfo;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class TeamPreviewMenu {
@@ -30,7 +31,7 @@ public class TeamPreviewMenu {
         int lead = preview.getPlayer(user).getLead();
         ServerPlayerEntity opponent = TeamPreview.getPlayer(preview.getOtherPlayer(user).getPlayer());
 
-        Pokemon startingPokemon = Cobblemon.INSTANCE.getStorage().getParty(user).get(lead);
+        Pokemon startingPokemon = preview.getPlayer(user).getPokemon().get(lead);
 
         ItemStack startingItem = startingPokemon != null ? PokemonItem.from(startingPokemon) :
                 new ItemStack(CobblemonItems.POKE_BALL);
@@ -64,8 +65,8 @@ public class TeamPreviewMenu {
                 .build();
 
         // Gets the user and opponent party Pokemon as lists.
-        ArrayList<Button> opponentPokemon = makeButtons(getPokemon(opponent), false, null);
-        ArrayList<Button> userPokemon = makeButtons(getPokemon(user), true, e -> {
+        ArrayList<Button> opponentPokemon = makeButtons(getPokemon(opponent, preview), false, null);
+        ArrayList<Button> userPokemon = makeButtons(getPokemon(user, preview), true, e -> {
 
             // Sets the players lead.
             preview.getPlayer(user).setLead(e);
@@ -97,19 +98,12 @@ public class TeamPreviewMenu {
                 .build();
     }
 
-    private ArrayList<Pokemon> getPokemon(ServerPlayerEntity player) {
-        PartyStore party = Cobblemon.INSTANCE.getStorage().getParty(player);
+    private List<Pokemon> getPokemon(ServerPlayerEntity player, Preview preview) {
 
-        ArrayList<Pokemon> pokemon = new ArrayList<>();
-
-        for (int x=0; x < 6; x++) {
-            pokemon.add(party.get(x));
-        }
-
-        return pokemon;
+        return preview.getPlayer(player).getPokemon();
     }
 
-    private ArrayList<Button> makeButtons(ArrayList<Pokemon> pokemons, boolean isUser,
+    private ArrayList<Button> makeButtons(List<Pokemon> pokemons, boolean isUser,
                                           Consumer<Integer> callback) {
         ArrayList<Button> buttons = new ArrayList<>();
 

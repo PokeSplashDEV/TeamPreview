@@ -1,10 +1,12 @@
 package org.pokesplash.teampreview.preview;
 
 import ca.landonjw.gooeylibs2.api.UIManager;
+import com.cobblemon.mod.common.pokemon.Pokemon;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.pokesplash.teampreview.TeamPreview;
 import org.pokesplash.teampreview.ui.TeamPreviewMenu;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -16,9 +18,11 @@ public class Preview {
     private boolean player2Ready;
     private Consumer<Preview> callback;
 
-    public Preview(UUID player1, UUID player2, Consumer<Preview> callback) {
-        this.player1 = new Participant(player1);
-        this.player2 = new Participant(player2);
+    public Preview(UUID player1, UUID player2,
+                   List<Pokemon> player1Pokemon, List<Pokemon> player2Pokemon,
+                   Consumer<Preview> callback) {
+        this.player1 = new Participant(player1, player1Pokemon);
+        this.player2 = new Participant(player2, player2Pokemon);
         this.callback = callback;
     }
 
